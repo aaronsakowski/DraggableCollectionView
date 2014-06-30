@@ -63,7 +63,7 @@ typedef NS_ENUM(NSInteger, _ScrollingDirection) {
         _panPressGestureRecognizer = [[UIPanGestureRecognizer alloc]
                                       initWithTarget:self action:@selector(handlePanGesture:)];
         _panPressGestureRecognizer.delegate = self;
-
+        
         [_collectionView addGestureRecognizer:_panPressGestureRecognizer];
         
         for (UIGestureRecognizer *gestureRecognizer in _collectionView.gestureRecognizers) {
@@ -263,7 +263,7 @@ typedef NS_ENUM(NSInteger, _ScrollingDirection) {
             // Tell the data source to move the item
             id<UICollectionViewDataSource_Draggable> dataSource = (id<UICollectionViewDataSource_Draggable>)self.collectionView.dataSource;
             [dataSource collectionView:self.collectionView moveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
-           
+            
             // Move the item
             [self.collectionView performBatchUpdates:^{
                 [self.collectionView moveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
@@ -271,9 +271,6 @@ typedef NS_ENUM(NSInteger, _ScrollingDirection) {
                 self.layoutHelper.toIndexPath = nil;
             } completion:^(BOOL finished) {
                 if (finished) {
-                    if ([dataSource respondsToSelector:@selector(collectionView:didMoveItemAtIndexPath:toIndexPath:)]) {
-                        [dataSource collectionView:self.collectionView didMoveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
-                    }
                 }
             }];
             
@@ -290,6 +287,12 @@ typedef NS_ENUM(NSInteger, _ScrollingDirection) {
                  mockCell = nil;
                  self.layoutHelper.hideIndexPath = nil;
                  [self.collectionView.collectionViewLayout invalidateLayout];
+                 
+                 if ([dataSource respondsToSelector:@selector(collectionView:didMoveItemAtIndexPath:toIndexPath:)]) {
+                     [dataSource collectionView:self.collectionView didMoveItemAtIndexPath:fromIndexPath toIndexPath:toIndexPath];
+                 }else{
+                     [self.collectionView reloadData];
+                 }
              }];
             
             // Reset
@@ -312,8 +315,8 @@ typedef NS_ENUM(NSInteger, _ScrollingDirection) {
             collectionView:self.collectionView
             canMoveItemAtIndexPath:self.layoutHelper.fromIndexPath
             toIndexPath:indexPath] == NO) {
-        return;
-    }
+            return;
+        }
     [self.collectionView performBatchUpdates:^{
         self.layoutHelper.hideIndexPath = indexPath;
         self.layoutHelper.toIndexPath = indexPath;
